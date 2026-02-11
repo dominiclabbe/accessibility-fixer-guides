@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "lastUpdated": "2026-02-10",
+  "description": "Single source of truth for all accessibility guides. Both Claude Code commands and GitHub app read from this manifest.",
+
+  "core": [
+    "COMPREHENSIVE_AUDIT_WORKFLOW.md",
+    "COMMON_ISSUES.md",
+    "GUIDE_WCAG_REFERENCE.md"
+  ],
+
+  "wcag": [
+    "wcag/QUICK_LOOKUP.md",
+    "wcag/COMPONENT_WCAG_MAPPINGS.md",
+    "wcag/SEVERITY_GUIDELINES.md",
+    "wcag/TESTING_CHECKLIST.md",
+    "wcag/MOBILE_WCAG_INTERPRETATION.md",
+    "wcag/PRINCIPLE_1_PERCEIVABLE.md",
+    "wcag/PRINCIPLE_2_OPERABLE.md",
+    "wcag/PRINCIPLE_3_UNDERSTANDABLE.md",
+    "wcag/PRINCIPLE_4_ROBUST.md",
+    "wcag/CONTRAST_CHECKING.md",
+    "wcag/ID_VALIDATION.md",
+    "wcag/LIVE_REGION_FREQUENCY.md",
+    "wcag/EDGE_CASE_VALIDATION.md"
+  ],
+
+  "patterns": [
+    "patterns/AVOID_ROLE_IN_LABEL.md",
+    "patterns/BUTTONS_ACTING_AS_TABS.md",
+    "patterns/COLLECTION_ITEMS_PATTERN.md",
+    "patterns/DECORATIVE_IMAGE_DECISION_TREE.md",
+    "patterns/FONT_SCALING_SUPPORT.md",
+    "patterns/NAVIGATION_BAR_ACCESSIBILITY.md",
+    "patterns/REPEATED_ELEMENTS_CONTEXT.md"
+  ],
+
+  "reference": [
+    "reference/ARIA_PATTERNS_REFERENCE.md"
+  ],
+
+  "platforms": {
+    "web": "platforms/GUIDE_WEB.md",
+    "android": "platforms/GUIDE_ANDROID.md",
+    "ios": "platforms/GUIDE_IOS.md",
+    "react-native": "platforms/GUIDE_REACT_NATIVE.md",
+    "flutter": "platforms/GUIDE_FLUTTER.md",
+    "android-tv": "platforms/GUIDE_ANDROID_TV.md",
+    "tvos": "platforms/GUIDE_TVOS.md"
+  }
+}
