@@ -94,7 +94,39 @@ decorativeImageView.isAccessibilityElement = false
 
 ---
 
-### 2. Accessibility Labels (SwiftUI)
+### 2. Accessibility Hints
+
+**Issue:** Interactive elements without usage hints
+
+```swift
+// ✅ CORRECT: Using hint to clarify interaction
+let playButton = UIButton()
+playButton.accessibilityLabel = "Play video"
+playButton.accessibilityHint = "Double-tap to start playing the video"
+playButton.accessibilityTraits = .button
+
+// SwiftUI
+Button("Play") {
+    playVideo()
+}
+.accessibilityLabel("Play video")
+.accessibilityHint("Double-tap to start playing")
+
+// ⚠️ Use hints sparingly - only when interaction isn't obvious
+// DON'T use for standard buttons where behavior is clear
+```
+
+**When to use hints:**
+- ✅ Custom gestures or non-standard interactions
+- ✅ Actions with non-obvious results
+- ❌ Standard buttons (Submit, Cancel, Close)
+- ❌ When the label makes the action clear
+
+**WCAG SC:** 4.1.2 Name, Role, Value (Level A)
+
+---
+
+### 3. Accessibility Labels (SwiftUI)
 
 ```swift
 // ❌ ISSUE: Image without label
@@ -120,7 +152,7 @@ Image("decorative")
 
 ---
 
-### 3. Accessibility Traits
+### 4. Accessibility Traits
 
 **Issue:** Custom interactive views without proper traits
 
@@ -158,7 +190,7 @@ Text("Submit")
 
 ---
 
-### 4. Headings
+### 5. Headings
 
 ```swift
 // ❌ ISSUE: Section title without heading trait
@@ -182,7 +214,7 @@ Text("Settings")
 
 ---
 
-### 5. Grouping Elements
+### 6. Grouping Elements
 
 **Issue:** Related elements announced separately
 
@@ -212,7 +244,7 @@ containerView.accessibilityLabel = "Rating: 4.5 stars"
 
 ---
 
-### 5a. Collection Items (UICollectionView, LazyVGrid, List)
+### 6a. Collection Items (UICollectionView, LazyVGrid, List)
 
 > 📖 **See detailed pattern guide:** [Collection Items Pattern](patterns/COLLECTION_ITEMS_PATTERN.md)
 >
@@ -301,7 +333,7 @@ cell.accessibilityCustomActions = [
 
 ---
 
-### 6. Text Input Labels
+### 7. Text Input Labels
 
 > ⚠️ **IMPORTANT:** TextField/SecureField with a placeholder/label parameter does NOT need additional accessibilityLabel. See [Avoid Redundant Information](patterns/AVOID_ROLE_IN_LABEL.md).
 
@@ -352,7 +384,7 @@ Form {
 
 ---
 
-### 7. Dynamic Content Announcements
+### 8. Dynamic Content Announcements
 
 **Issue:** Status changes not announced
 
@@ -426,7 +458,7 @@ TabView(selection: $selectedTab) {
 
 ---
 
-### 8. Custom Actions
+### 9. Custom Actions
 
 **Issue:** Swipe actions not accessible
 
@@ -464,7 +496,7 @@ Button("Item") {
 
 ---
 
-### 9. Accessibility Value
+### 10. Accessibility Value
 
 > ⚠️ **CRITICAL:** Most components announce their value/state AUTOMATICALLY. Only use `accessibilityValue` for custom value formatting (sliders, pickers). See [Avoid Redundant Information](patterns/AVOID_ROLE_IN_LABEL.md).
 
@@ -519,21 +551,27 @@ Circle()
 
 ---
 
-### 10. Touch Target Sizes
+### 11. Touch Target Sizes
 
 **Issue:** Touch targets too small
 
 ```swift
-// ❌ ISSUE: Button too small (30x30)
+// ❌ ISSUE: Button too small (24x24)
 Button(action: {}) {
     Image(systemName: "xmark")
-        .frame(width: 30, height: 30)
+        .frame(width: 24, height: 24)
 }
 
-// ✅ CORRECT: Minimum 44x44 points
+// ✅ CORRECT: Default 44x44 points (recommended)
 Button(action: {}) {
     Image(systemName: "xmark")
         .frame(width: 44, height: 44)
+}
+
+// ✅ ACCEPTABLE: Minimum 28x28 points (when space constrained)
+Button(action: {}) {
+    Image(systemName: "xmark")
+        .frame(width: 28, height: 28)
 }
 
 // ✅ CORRECT: Smaller visual with proper touch area
@@ -542,15 +580,45 @@ Button(action: {}) {
         .font(.system(size: 16))
 }
 .frame(width: 44, height: 44)
+
+// UIKit
+let button = UIButton()
+button.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
 ```
 
 **WCAG SC:** 2.5.8 Target Size (Minimum) (Level AA)
 
-**Requirements:** Minimum 44×44 points
+**Requirements:**
+- **Default:** 44×44 points (recommended)
+- **Minimum:** 28×28 points (only when space is limited)
+
+**Element Spacing:**
+- **With bezel** (buttons, controls): 12pt padding around elements
+- **Without bezel** (custom touch areas): 24pt padding around visible edges
+
+```swift
+// ✅ CORRECT: Proper spacing between controls
+HStack(spacing: 12) {
+    Button("Back") { }
+        .frame(width: 44, height: 44)
+    Button("Forward") { }
+        .frame(width: 44, height: 44)
+}
+
+// Custom touch areas without visible bezel
+HStack(spacing: 24) {
+    Image(systemName: "star")
+        .onTapGesture { }
+        .frame(width: 44, height: 44)
+    Image(systemName: "heart")
+        .onTapGesture { }
+        .frame(width: 44, height: 44)
+}
+```
 
 ---
 
-### 11. Tab Bar / Bottom Navigation Accessibility
+### 12. Tab Bar / Bottom Navigation Accessibility
 
 > 📖 **See detailed pattern guide:** [Navigation Bar Accessibility](patterns/NAVIGATION_BAR_ACCESSIBILITY.md)
 >
@@ -643,7 +711,7 @@ struct CustomTabButton: View {
 
 ---
 
-### 12. Context for Repeated Elements
+### 13. Context for Repeated Elements
 
 > 📖 **See detailed pattern guide:** [Repeated Elements Context](patterns/REPEATED_ELEMENTS_CONTEXT.md)
 >
@@ -705,6 +773,258 @@ Button { deleteEmail(email) } {
 
 ---
 
+### 14. Escape Gesture for Dismissal
+
+**Issue:** Modal views or navigation not dismissible with VoiceOver escape gesture
+
+VoiceOver users can perform a two-finger Z-gesture (scrub) to go back or dismiss modals. Implement `accessibilityPerformEscape` to support this.
+
+```swift
+// ✅ CORRECT: Support escape gesture in custom modal (UIKit)
+class CustomModalViewController: UIViewController {
+    override func accessibilityPerformEscape() -> Bool {
+        dismiss(animated: true, completion: nil)
+        return true  // Return true if action was handled
+    }
+}
+
+// Custom navigation
+class CustomViewController: UIViewController {
+    override func accessibilityPerformEscape() -> Bool {
+        navigationController?.popViewController(animated: true)
+        return true
+    }
+}
+
+// SwiftUI - Automatic with sheet/fullScreenCover
+struct ContentView: View {
+    @State private var showModal = false
+
+    var body: some View {
+        Button("Show Modal") {
+            showModal = true
+        }
+        .sheet(isPresented: $showModal) {
+            ModalView()
+        }
+        // Two-finger Z-gesture automatically dismisses
+    }
+}
+
+// SwiftUI - Custom dismissal with @Environment
+struct ModalView: View {
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        VStack {
+            Text("Modal Content")
+            Button("Close") {
+                dismiss()
+            }
+        }
+        // Escape gesture automatically calls dismiss()
+    }
+}
+
+// Custom view with escape support
+class CustomOverlayView: UIView {
+    override func accessibilityPerformEscape() -> Bool {
+        removeFromSuperview()
+        return true
+    }
+}
+```
+
+**When to implement:**
+- ✅ Custom modal views
+- ✅ Custom popovers
+- ✅ Custom navigation hierarchies
+- ✅ Dismissible overlays
+- ✅ Custom back navigation
+- ❌ Standard UINavigationController (handles automatically)
+- ❌ Standard sheet presentation (handles automatically)
+
+**Testing:** Enable VoiceOver and perform two-finger Z-gesture (scrub) to dismiss
+
+**WCAG SC:** 2.1.1 Keyboard (Level A)
+
+---
+
+### 15. Motor Accessibility - Gesture Alternatives
+
+**Issue:** Critical functions only accessible through complex gestures
+
+```swift
+// ❌ ISSUE: Swipe gesture without alternative
+let swipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(nextItem))
+view.addGestureRecognizer(swipeGesture)
+
+// ✅ CORRECT: Provide button alternative
+let swipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(nextItem))
+view.addGestureRecognizer(swipeGesture)
+
+// Add visible button alternative
+let nextButton = UIButton(type: .system)
+nextButton.setTitle("Next Item", for: .normal)
+nextButton.addAction(UIAction { _ in
+    self.nextItem()
+}, for: .touchUpInside)
+nextButton.accessibilityLabel = "Go to next item"
+
+// SwiftUI - Provide alternative to multi-touch gestures
+struct ContentView: View {
+    var body: some View {
+        VStack {
+            // Gesture-based interaction
+            imageView
+                .gesture(
+                    DragGesture()
+                        .onEnded { _ in moveToNextItem() }
+                )
+
+            // Button alternative
+            Button("Next Item") {
+                moveToNextItem()
+            }
+            .accessibilityLabel("Go to next item")
+        }
+    }
+}
+```
+
+**Common Gesture Alternatives:**
+- Swipe → Button or segmented control
+- Pinch to zoom → Zoom in/out buttons
+- Long press → Dedicated action button
+- Multi-finger gestures → Single-tap alternatives
+
+**WCAG SC:** 2.1.1 Keyboard (Level A) - adapted for mobile, 2.5.1 Pointer Gestures (Level A)
+
+---
+
+### 16. Motion Sensitivity - Reduce Motion
+
+**Issue:** Animations not respecting motion preferences
+
+```swift
+// ❌ ISSUE: Animation always plays
+UIView.animate(withDuration: 0.5) {
+    imageView.alpha = 1.0
+}
+
+// ✅ CORRECT: Check Reduce Motion preference
+if UIAccessibility.isReduceMotionEnabled {
+    // Instant change without animation
+    imageView.alpha = 1.0
+} else {
+    // Animate for users who can handle motion
+    UIView.animate(withDuration: 0.5) {
+        imageView.alpha = 1.0
+    }
+}
+
+// SwiftUI - Automatic with @Environment
+struct ContentView: View {
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
+
+    var body: some View {
+        image
+            .opacity(isVisible ? 1 : 0)
+            .animation(reduceMotion ? .none : .easeInOut, value: isVisible)
+    }
+}
+
+// Or conditionally apply animation
+.animation(reduceMotion ? nil : .spring(), value: scale)
+```
+
+**When to apply Reduce Motion:**
+- ✅ Fade transitions
+- ✅ Slide/move animations
+- ✅ Rotation animations
+- ✅ Scale/zoom effects
+- ✅ Parallax scrolling
+- ❌ Don't remove functional animations (progress indicators)
+- ❌ Don't remove state change feedback (just reduce intensity)
+
+**WCAG SC:** 2.3.3 Animation from Interactions (Level AAA)
+
+---
+
+### 17. Video and Media Accessibility
+
+**Issue:** Video content without captions or audio descriptions
+
+```swift
+// ❌ ISSUE: Video without caption support
+let player = AVPlayer(url: videoURL)
+let playerViewController = AVPlayerViewController()
+playerViewController.player = player
+
+// ✅ CORRECT: Enable caption tracks
+import AVFoundation
+
+let asset = AVAsset(url: videoURL)
+let playerItem = AVPlayerItem(asset: asset)
+
+// Ensure captions are loaded
+playerItem.automaticallyPreservesTimeOffsetFromLive = true
+
+let player = AVPlayer(playerItem: playerItem)
+let playerViewController = AVPlayerViewController()
+playerViewController.player = player
+
+// Enable caption display
+if let group = asset.mediaSelectionGroup(forMediaCharacteristic: .legible) {
+    let locale = Locale(identifier: "en")
+    let options = AVMediaSelectionGroup.mediaSelectionOptions(from: group.options, with: locale)
+    if let option = options.first {
+        playerItem.select(option, in: group)
+    }
+}
+
+// SwiftUI with VideoPlayer (iOS 14+)
+import AVKit
+
+struct VideoView: View {
+    let player = AVPlayer(url: videoURL)
+
+    var body: some View {
+        VideoPlayer(player: player)
+            .onAppear {
+                // Configure caption support
+                player.currentItem?.select(captionOption, in: captionGroup)
+            }
+    }
+}
+```
+
+**Media Accessibility Requirements:**
+- ✅ Captions for audio content
+- ✅ Audio descriptions for visual-only content
+- ✅ Transcript availability
+- ✅ Accessible media controls
+- ✅ Keyboard/VoiceOver control support
+
+**WCAG SC:** 1.2.2 Captions (Prerecorded) (Level A), 1.2.3 Audio Description (Level A)
+
+---
+
+### 18. Advanced Accessibility Features
+
+> **For advanced features, see:** [IOS_ADVANCED.md](IOS_ADVANCED.md)
+
+This guide covers specialized features including:
+- Magic Tap, Large Content Viewer, Smart Invert
+- VoiceOver Pronunciation, Haptics
+- Full Keyboard Access, Switch Control, Voice Control
+- Assistive Access, Auto-play Controls
+- UIAccessibilityCustomRotor, Vision framework, AVSpeechSynthesizer
+
+Load the advanced guide when you detect these specialized patterns in the codebase.
+
+---
+
 ## tvOS Specific
 
 ### Focus Engine
@@ -723,7 +1043,7 @@ override func didUpdateFocus(
     with coordinator: UIFocusAnimationCoordinator
 ) {
     super.didUpdateFocus(in: context, with: coordinator)
-    
+
     if context.nextFocusedView == self {
         // Handle focus gained
         coordinator.addCoordinatedAnimations({
@@ -744,6 +1064,8 @@ Button("Watch Now") {
 .buttonStyle(.card)
 .focusable()
 ```
+
+**WCAG SC:** 2.4.7 Focus Visible (Level AA)
 
 ---
 
@@ -864,24 +1186,178 @@ grep -r "channelLogo" ios/**/*View.swift
 ---
 
 
-## Dynamic Type Support
+## Color Contrast
+
+**Issue:** Insufficient contrast between text/icons and background
+
+**WCAG Level AA Minimum Contrast Requirements:**
+
+| Text size | Text weight | Minimum contrast ratio |
+|-----------|-------------|------------------------|
+| Up to 17pt | All | 4.5:1 |
+| 18pt+ | All | 3:1 |
+| Any size | Bold | 3:1 |
 
 ```swift
-// ✅ CORRECT: Use preferredFont
+// ❌ ISSUE: Insufficient contrast (2.1:1)
+Text("Hello")
+    .foregroundColor(Color(red: 0.7, green: 0.7, blue: 0.7))
+    .background(Color.white)
+
+// ✅ CORRECT: Sufficient contrast for small text (4.5:1+)
+Text("Hello")
+    .foregroundColor(Color(red: 0.33, green: 0.33, blue: 0.33))
+    .background(Color.white)
+
+// ✅ CORRECT: Sufficient contrast for large/bold text (3:1+)
+Text("Heading")
+    .font(.title.bold())
+    .foregroundColor(Color(red: 0.6, green: 0.6, blue: 0.6))
+    .background(Color.white)
+```
+
+**Support Increase Contrast Setting:**
+
+```swift
+// SwiftUI - Automatic with @Environment
+struct ContentView: View {
+    @Environment(\.accessibilityIncreaseContrast) var increaseContrast
+
+    var body: some View {
+        Text("Hello")
+            .foregroundColor(increaseContrast ? .black : .gray)
+            .background(Color.white)
+    }
+}
+
+// UIKit - Check setting
+if UIAccessibility.isDarkerSystemColorsEnabled {
+    label.textColor = .black  // High contrast
+} else {
+    label.textColor = .darkGray  // Standard contrast
+}
+```
+
+**Prefer System-Defined Colors:**
+
+```swift
+// ✅ CORRECT: System colors adapt automatically
+Text("Hello")
+    .foregroundColor(.primary)  // Adapts to light/dark mode and contrast settings
+
+// UIKit
+label.textColor = .label  // System-defined color with accessible variants
+```
+
+**System colors with automatic accessible variants:**
+- `.label` / `.secondaryLabel` / `.tertiaryLabel`
+- `.systemRed`, `.systemBlue`, `.systemGreen`, etc.
+- These automatically adjust for Increase Contrast and Dark Mode
+
+**Don't Rely on Color Alone:**
+
+```swift
+// ❌ ISSUE: Status only shown by color
+Circle()
+    .fill(isActive ? Color.green : Color.red)
+
+// ✅ CORRECT: Color + icon
+HStack {
+    Image(systemName: isActive ? "checkmark.circle" : "xmark.circle")
+    Circle()
+        .fill(isActive ? Color.green : Color.red)
+}
+.accessibilityLabel(isActive ? "Active" : "Inactive")
+
+// ✅ CORRECT: Color + shape
+if isActive {
+    Circle().fill(Color.green)
+} else {
+    Rectangle().fill(Color.red)
+}
+```
+
+**WCAG SC:** 1.4.3 Contrast (Minimum) (Level AA), 1.4.11 Non-text Contrast (Level AA)
+
+**Testing:** Use Accessibility Inspector in Xcode to check contrast ratios
+
+---
+
+
+## Dynamic Type Support
+
+**Issue:** Text doesn't scale with user's preferred size
+
+```swift
+// ❌ ISSUE: Fixed font size
+let label = UILabel()
+label.font = UIFont.systemFont(ofSize: 16)
+// Won't scale with Dynamic Type
+
+// ✅ CORRECT: Use preferredFont (UIKit)
 let label = UILabel()
 label.font = .preferredFont(forTextStyle: .body)
 label.adjustsFontForContentSizeCategory = true
+label.numberOfLines = 0 // Allow wrapping
+
+// ✅ CORRECT: Scale custom fonts with UIFontMetrics
+let label = UILabel()
+label.numberOfLines = 0
+label.adjustsFontForContentSizeCategory = true
+label.font = UIFontMetrics(forTextStyle: .body)
+    .scaledFont(for: UIFont.systemFont(ofSize: 16))
+
+// Or with custom font
+let customFont = UIFont(name: "MyCustomFont", size: 16) ?? UIFont.systemFont(ofSize: 16)
+label.font = UIFontMetrics(forTextStyle: .body).scaledFont(for: customFont)
 
 // SwiftUI - automatic with system fonts
 Text("Hello")
     .font(.body)
 
-// Custom font that scales
+// SwiftUI - custom font that scales
 Text("Hello")
     .font(.custom("MyFont", size: 17, relativeTo: .body))
 ```
 
+**Requirements:**
+- Support text sizes from xSmall to AX5 (extra large accessibility sizes)
+- Layouts must not clip or overflow at any size
+- Use `numberOfLines = 0` for labels to allow wrapping
+- Test with largest accessibility sizes enabled
+
 **WCAG SC:** 1.4.4 Resize Text (Level AA)
+
+---
+
+
+## Reference Resources
+
+### CVS Health iOS SwiftUI Accessibility Techniques
+
+For component-specific accessibility patterns and detailed SwiftUI examples, see:
+
+**Repository:** https://github.com/cvs-health/ios-swiftui-accessibility-techniques
+
+**What it covers (75+ techniques):**
+- Component-specific patterns: Accordions, Data Tables, Charts, Horizontal Scroll Views
+- Form components: Checkboxes, Radio Buttons, Segmented Controls, Date/Time Pickers
+- Advanced patterns: Rotor customization, Attributed Strings, TipKit accessibility
+- Detailed SwiftUI examples with live good/bad demonstrations
+
+**License:** Apache License 2.0
+**Attribution:** © CVS Health. Licensed under Apache 2.0.
+This guide references patterns from the CVS Health iOS SwiftUI Accessibility Techniques project.
+
+**When to use this resource:**
+- Implementing specific components (accordions, data tables, charts)
+- Need detailed SwiftUI-specific examples
+- Building complex custom controls
+- Component-level accessibility deep dives
+
+**Our guide vs CVS Health repo:**
+- **Our guide:** Broad coverage of common audit patterns across iOS/tvOS
+- **CVS Health repo:** Deep component-specific SwiftUI implementations with live examples
 
 ---
 

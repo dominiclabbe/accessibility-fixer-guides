@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "lastUpdated": "2026-02-16",
   "description": "Single source of truth for all accessibility guides. Both Claude Code commands and GitHub app read from this manifest.",
 
@@ -57,6 +57,13 @@
         "file": "platforms/WEB_ARIA_PATTERNS.md",
         "loadWhen": "Complex ARIA patterns detected (tabs, accordion, modal, combobox, menu, disclosure)",
         "tokenEstimate": 3700
+      }
+    },
+    "ios": {
+      "advanced-features": {
+        "file": "platforms/IOS_ADVANCED.md",
+        "loadWhen": "Advanced VoiceOver features (Magic Tap, Custom Rotor, Large Content Viewer), system setting customizations (Smart Invert, Assistive Access), haptic feedback, keyboard/switch/voice control support, or Vision/Speech frameworks detected",
+        "tokenEstimate": 3560
       }
     },
     "android": {
