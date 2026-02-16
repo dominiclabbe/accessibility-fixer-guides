@@ -74,8 +74,8 @@
       },
       "advanced-patterns": {
         "file": "platforms/ANDROID_ADVANCED.md",
-        "loadWhen": "Gestures (swipe/drag) or media content detected",
-        "tokenEstimate": 2600
+        "loadWhen": "Gestures (swipe/drag), media content, forms with autofill, keyboard navigation (D-pad), or multi-language content detected",
+        "tokenEstimate": 4555
       }
     }
   }

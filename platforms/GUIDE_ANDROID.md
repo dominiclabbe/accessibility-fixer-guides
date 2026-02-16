@@ -1753,7 +1753,58 @@ class CalendarView(context: Context) : View(context) {
 
 ---
 
+### 18. Advanced Input Patterns
+
+> **For advanced input patterns, see:** [ANDROID_ADVANCED.md](ANDROID_ADVANCED.md)
+
+This advanced guide covers specialized input patterns including:
+- **Arrow Key Navigation (D-pad Support)** - Keyboard/TV remote navigation, focus order
+- **Keyboard Input Types** - Email, phone, number, password keyboards
+- **Autofill Support** - Username, password, credit card autofill
+- **Language Identification** - Multi-language content, LocaleSpan
+
+Load the advanced guide when you detect forms, keyboard navigation, or multi-language content.
+
+---
+
 ## Resources
+
+### CVS Health Android Accessibility Techniques
+
+For component-specific accessibility patterns and detailed implementations:
+
+#### Android View Accessibility Techniques
+**Repository:** https://github.com/cvs-health/android-view-accessibility-techniques
+
+**What it covers (30 techniques):**
+- **Accessibility Basics (7):** Text alternatives, input labels, focusable controls, responsive text sizing, touch targets, orientation support, dark theme
+- **Grouping and Ordering (8):** Combining tap targets, semantic organization, group replacement, headings, lists, reading order, focus order, arrow key navigation
+- **Dynamic Behaviors (8):** Live announcements, error messages, animation controls, keyboard types, custom actions, state descriptions, custom accessibility actions, focus indicators
+- **Specific Components (7):** Accordion, autocomplete, autofill, dropdown menus, inline links, rating controls, language identification
+
+#### Android Compose Accessibility Techniques
+**Repository:** https://github.com/cvs-health/android-compose-accessibility-techniques
+
+**What it covers:**
+- **Informative Content:** Text alternatives, traversal order, content grouping, heading/list semantics, adaptive layouts, theming, screen titles
+- **Interactive Behaviors:** Control labeling, touch targets, announcements, keyboard navigation, custom focus indicators, state descriptions
+- **Specific Components:** Accordion, autofill, checkbox, dropdown, links, list items, modals, navigation bars, pop-ups, radio buttons, sliders, switches, tabs, text fields
+
+**License:** Apache License 2.0
+**Attribution:** © CVS Health. Licensed under Apache 2.0.
+This guide references patterns from the CVS Health Android Accessibility Techniques projects.
+
+**When to use these resources:**
+- Implementing specific components (accordions, rating controls, autocomplete)
+- Need detailed View or Compose-specific examples
+- Building complex custom controls
+- Component-level accessibility deep dives
+
+**Our guide vs CVS Health repos:**
+- **Our guide:** Broad coverage of common audit patterns for standard Android apps
+- **CVS Health repos:** Deep component-specific implementations with working examples and Espresso tests
+
+---
 
 ### Official Documentation
 - **Android Accessibility Overview:** https://developer.android.com/guide/topics/ui/accessibility

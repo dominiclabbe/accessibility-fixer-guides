@@ -523,4 +523,389 @@ Understanding Android's built-in accessibility services helps you design and tes
 
 ---
 
+## Advanced Input Patterns
+
+### Arrow Key Navigation (D-pad Support)
+
+**Issue:** App not navigable with arrow keys (D-pad, keyboard, TV remote)
+
+```xml
+<!-- ❌ ISSUE: Focusable views without proper focus order -->
+<LinearLayout>
+    <Button android:id="@+id/button1" />
+    <Button android:id="@+id/button2" />
+</LinearLayout>
+
+<!-- ✅ CORRECT: Explicit focus navigation -->
+<LinearLayout>
+    <Button
+        android:id="@+id/button1"
+        android:nextFocusRight="@id/button2"
+        android:nextFocusDown="@id/button3" />
+
+    <Button
+        android:id="@+id/button2"
+        android:nextFocusLeft="@id/button1"
+        android:nextFocusDown="@id/button4" />
+</LinearLayout>
+
+<!-- Compose - Automatic focus order with focusable() -->
+@Composable
+fun NavigableGrid() {
+    LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+        items(items) { item ->
+            Button(
+                onClick = { },
+                modifier = Modifier.focusable()
+            ) {
+                Text(item.name)
+            }
+        }
+    }
+}
+
+// Custom focus order in Compose
+@Composable
+fun CustomFocusOrder() {
+    val focusRequesters = remember { List(4) { FocusRequester() } }
+
+    Column {
+        items.forEachIndexed { index, item ->
+            Button(
+                onClick = { },
+                modifier = Modifier
+                    .focusRequester(focusRequesters[index])
+                    .onKeyEvent { event ->
+                        when {
+                            event.key == Key.DirectionRight && index < 3 -> {
+                                focusRequesters[index + 1].requestFocus()
+                                true
+                            }
+                            event.key == Key.DirectionLeft && index > 0 -> {
+                                focusRequesters[index - 1].requestFocus()
+                                true
+                            }
+                            else -> false
+                        }
+                    }
+            ) {
+                Text(item.name)
+            }
+        }
+    }
+}
+```
+
+**Testing:**
+- Connect external keyboard or use Android TV
+- Navigate using arrow keys
+- Ensure logical focus order
+
+**WCAG SC:** 2.1.1 Keyboard (Level A), 2.4.3 Focus Order (Level A)
+
+---
+
+### Keyboard Input Types
+
+**Issue:** Incorrect keyboard type for input fields
+
+```xml
+<!-- ❌ ISSUE: Generic keyboard for email -->
+<EditText
+    android:id="@+id/emailInput"
+    android:hint="Email" />
+
+<!-- ✅ CORRECT: Email keyboard -->
+<EditText
+    android:id="@+id/emailInput"
+    android:hint="Email"
+    android:inputType="textEmailAddress" />
+
+<!-- Phone number -->
+<EditText
+    android:hint="Phone"
+    android:inputType="phone" />
+
+<!-- URL -->
+<EditText
+    android:hint="Website"
+    android:inputType="textUri" />
+
+<!-- Number -->
+<EditText
+    android:hint="Age"
+    android:inputType="number" />
+
+<!-- Password -->
+<EditText
+    android:hint="Password"
+    android:inputType="textPassword" />
+```
+
+**Compose:**
+```kotlin
+// ✅ CORRECT: Email keyboard
+TextField(
+    value = email,
+    onValueChange = { email = it },
+    label = { Text("Email") },
+    keyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Email
+    )
+)
+
+// Phone
+TextField(
+    value = phone,
+    onValueChange = { phone = it },
+    label = { Text("Phone") },
+    keyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Phone
+    )
+)
+
+// Number
+TextField(
+    value = age,
+    onValueChange = { age = it },
+    label = { Text("Age") },
+    keyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Number
+    )
+)
+
+// Password
+TextField(
+    value = password,
+    onValueChange = { password = it },
+    label = { Text("Password") },
+    keyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Password
+    ),
+    visualTransformation = PasswordVisualTransformation()
+)
+
+// URI
+TextField(
+    value = website,
+    onValueChange = { website = it },
+    label = { Text("Website") },
+    keyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Uri
+    )
+)
+```
+
+**Common Input Types:**
+- `Email` - Email addresses
+- `Phone` - Phone numbers
+- `Number` - Numeric input
+- `Password` - Password fields
+- `Uri` - URLs
+- `Text` - Default text
+
+**WCAG SC:** 1.3.5 Identify Input Purpose (Level AA)
+
+---
+
+### Autofill Support
+
+**Issue:** Forms don't support autofill
+
+```xml
+<!-- ❌ ISSUE: No autofill hints -->
+<EditText
+    android:id="@+id/username"
+    android:hint="Username" />
+
+<!-- ✅ CORRECT: Autofill hints provided -->
+<EditText
+    android:id="@+id/username"
+    android:hint="Username"
+    android:autofillHints="username"
+    android:importantForAutofill="yes" />
+
+<!-- Email -->
+<EditText
+    android:hint="Email"
+    android:autofillHints="emailAddress"
+    android:inputType="textEmailAddress" />
+
+<!-- Password -->
+<EditText
+    android:hint="Password"
+    android:autofillHints="password"
+    android:inputType="textPassword" />
+
+<!-- Credit card -->
+<EditText
+    android:hint="Card Number"
+    android:autofillHints="creditCardNumber"
+    android:inputType="number" />
+
+<!-- Name -->
+<EditText
+    android:hint="Full Name"
+    android:autofillHints="personName" />
+
+<!-- Address -->
+<EditText
+    android:hint="Street Address"
+    android:autofillHints="postalAddress" />
+
+<!-- Phone -->
+<EditText
+    android:hint="Phone"
+    android:autofillHints="phoneNumber"
+    android:inputType="phone" />
+```
+
+**Compose:**
+```kotlin
+// ✅ CORRECT: Autofill with Compose
+TextField(
+    value = username,
+    onValueChange = { username = it },
+    label = { Text("Username") },
+    modifier = Modifier.semantics {
+        contentType = ContentType.Username
+    }
+)
+
+// Email
+TextField(
+    value = email,
+    onValueChange = { email = it },
+    label = { Text("Email") },
+    keyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Email,
+        autoCorrect = false
+    ),
+    modifier = Modifier.semantics {
+        contentType = ContentType.EmailAddress
+    }
+)
+
+// Password
+TextField(
+    value = password,
+    onValueChange = { password = it },
+    label = { Text("Password") },
+    visualTransformation = PasswordVisualTransformation(),
+    keyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Password
+    ),
+    modifier = Modifier.semantics {
+        contentType = ContentType.Password
+    }
+)
+
+// Credit card
+TextField(
+    value = cardNumber,
+    onValueChange = { cardNumber = it },
+    label = { Text("Card Number") },
+    keyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Number
+    ),
+    modifier = Modifier.semantics {
+        contentType = ContentType.CreditCardNumber
+    }
+)
+```
+
+**Common Autofill Hints:**
+- `username` - Username
+- `password` - Password
+- `emailAddress` - Email
+- `personName` - Full name
+- `postalAddress` - Address
+- `phoneNumber` - Phone
+- `creditCardNumber` - Card number
+
+**WCAG SC:** 1.3.5 Identify Input Purpose (Level AA)
+
+---
+
+### Language Identification
+
+**Issue:** Multi-language content not identified
+
+```xml
+<!-- ❌ ISSUE: Mixed language content without identification -->
+<TextView
+    android:text="Welcome! Bienvenue!" />
+
+<!-- ✅ CORRECT: Use android:textLocale for specific languages -->
+<TextView
+    android:id="@+id/frenchText"
+    android:text="Bienvenue"
+    android:textLocale="fr" />
+
+<TextView
+    android:id="@+id/spanishText"
+    android:text="Bienvenido"
+    android:textLocale="es" />
+
+<!-- For mixed content, use LocaleSpan -->
+```
+
+**Using LocaleSpan for mixed content:**
+```kotlin
+val text = SpannableString("Welcome! Bienvenue!")
+text.setSpan(
+    LocaleSpan(Locale.FRENCH),
+    9,  // Start index
+    19, // End index
+    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+)
+textView.text = text
+```
+
+**Compose:**
+```kotlin
+// ✅ CORRECT: Language identification in Compose
+Text(
+    text = "Bienvenue",
+    modifier = Modifier.semantics {
+        localeList = LocaleListCompat.forLanguageTags("fr")
+    }
+)
+
+// Mixed language with AnnotatedString
+val annotatedText = buildAnnotatedString {
+    withStyle(SpanStyle()) {
+        append("Welcome! ")
+    }
+    withAnnotation("language", "fr") {
+        append("Bienvenue!")
+    }
+}
+
+Text(
+    text = annotatedText,
+    modifier = Modifier.semantics {
+        // TalkBack will detect language changes
+    }
+)
+
+// For entire screen language
+CompositionLocalProvider(LocalLocale provides Locale.FRENCH) {
+    Column {
+        Text("Titre")
+        Text("Description")
+    }
+}
+```
+
+**When to use:**
+- ✅ Multi-language content in same view
+- ✅ Foreign language quotes or phrases
+- ✅ Mixed language UI elements
+- ✅ User-generated content in different languages
+
+**WCAG SC:** 3.1.2 Language of Parts (Level AA)
+
+---
+
 
