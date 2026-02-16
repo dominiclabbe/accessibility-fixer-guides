@@ -3,16 +3,6 @@
 
 ---
 
-## Overview
-
-tvOS has unique accessibility requirements for living room interfaces.
-
-**Key Focus:**
-- Focus engine
-- Siri Remote navigation
-- VoiceOver for TV
-
----
 
 ## tvOS Specific Patterns
 
@@ -63,15 +53,3 @@ All guidance from GUIDE_IOS.md applies - labels, traits, etc. are the same.
 
 ---
 
-## Testing
-
-- Test with Siri Remote
-- Enable VoiceOver on Apple TV
-- Verify focus animations are clear
-- Ensure focus order is logical
-
----
-
-**Related Guides:**
-- GUIDE_IOS.md - Core iOS patterns apply to tvOS
-- GUIDE_WCAG_REFERENCE.md

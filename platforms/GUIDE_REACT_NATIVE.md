@@ -1,27 +1,8 @@
 # React Native Accessibility Audit Guide
-## Cross-Platform Mobile Development
 
 ---
 
-## Overview
 
-This guide covers accessibility auditing for React Native applications that run on both iOS and Android.
-
-**Key Consideration:** Test on BOTH platforms as behavior may differ.
-
-**Target:** WCAG 2.2 Level AA compliance adapted for mobile
-
----
-
-## Technology Focus
-
-- Cross-platform accessibility props
-- Platform-specific implementations
-- Screen reader compatibility (TalkBack & VoiceOver)
-- Touch target sizing
-- Form accessibility
-
----
 
 ## Key Code Patterns to Check
 
@@ -565,51 +546,6 @@ import { Platform } from 'react-native';
 
 ---
 
-## Files to Analyze
 
-- `src/components/**/*.{js,jsx,ts,tsx}` - Component files
-- `src/screens/**/*.{js,jsx,ts,tsx}` - Screen files
-- `src/navigation/**/*.{js,jsx,ts,tsx}` - Navigation setup
-- Custom component libraries
 
----
 
-## Testing Tools
-
-### iOS
-- VoiceOver (Settings > Accessibility)
-- Xcode Accessibility Inspector (when running on simulator)
-
-### Android
-- TalkBack (Settings > Accessibility)
-- Accessibility Scanner app
-
-### Both Platforms
-- Test on real devices, not just simulators
-- Test with screen readers enabled
-- Test touch target sizes
-- Test font scaling
-
----
-
-## Quick Checklist
-
-- [ ] All images have accessibilityLabel or are marked decorative
-- [ ] All interactive elements have accessibilityRole
-- [ ] Touch targets minimum 44×44 or use hitSlop
-- [ ] Form inputs have labels and hints
-- [ ] Dynamic content uses accessibilityLiveRegion
-- [ ] Related elements grouped with accessible={true}
-- [ ] Headings marked with accessibilityRole="header"
-- [ ] States communicated (checked, selected, disabled)
-- [ ] Tested with TalkBack (Android)
-- [ ] Tested with VoiceOver (iOS)
-- [ ] Font scaling tested on both platforms
-
----
-
-**Related Guides:**
-- GUIDE_WCAG_REFERENCE.md
-- GUIDE_ANDROID.md - Android-specific patterns
-- GUIDE_IOS.md - iOS-specific patterns
-- COMMON_ISSUES.md

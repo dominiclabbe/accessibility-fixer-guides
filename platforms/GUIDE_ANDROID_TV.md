@@ -3,17 +3,6 @@
 
 ---
 
-## Overview
-
-Android TV has specific accessibility requirements for living room interfaces.
-
-**Key Focus:**
-- D-pad navigation
-- Focus management
-- TalkBack for TV
-- Larger touch targets (for remote pointer)
-
----
 
 ## Android TV Specific Patterns
 
@@ -70,15 +59,3 @@ All guidance from GUIDE_ANDROID.md applies, plus:
 
 ---
 
-## Testing
-
-- Test with D-pad remote
-- Enable TalkBack on Android TV
-- Verify focus order is logical
-- Ensure all interactive elements are focusable
-
----
-
-**Related Guides:**
-- GUIDE_ANDROID.md - Core Android patterns
-- GUIDE_WCAG_REFERENCE.md

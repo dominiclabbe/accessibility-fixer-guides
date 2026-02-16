@@ -32,6 +32,20 @@ This guide covers accessibility auditing for Android applications using:
 
 ---
 
+## Guide Navigation
+
+This is the **core Android accessibility audit guide** covering common issues you'll encounter in most audits.
+
+**Specialized guides for advanced topics:**
+- **[ANDROID_CUSTOM_VIEWS.md](ANDROID_CUSTOM_VIEWS.md)** - Custom views accessibility deep dive
+  - Use when: App has custom views extending from `View`, complex multi-region controls
+- **[ANDROID_ADVANCED.md](ANDROID_ADVANCED.md)** - Advanced topics (gestures, media)
+  - Use when: App has swipe gestures, drag-and-drop, video/audio content
+
+**Focus of this guide:** Common accessibility patterns for standard Android apps.
+
+---
+
 ## Technology Focus
 
 ### Core Android Technologies
@@ -566,7 +580,283 @@ ViewCompat.setAccessibilityHeading(binding.sectionTitle, true)
 
 ---
 
-### 8. Live Regions (Compose)
+### 8. Accessibility Actions for Gestures
+
+> 📖 **See advanced guide:** [ANDROID_ADVANCED.md](ANDROID_ADVANCED.md#accessibility-actions-for-gestures)
+
+**Issue:** Gestures (swipe, drag-and-drop, pinch) without equivalent accessibility actions
+
+**⚠️ CRITICAL:** All gestures MUST have equivalent accessibility actions for users who cannot perform the gesture.
+
+**Quick Check:**
+- Does the app use swipe-to-delete or swipe-to-archive?
+- Does it have drag-and-drop reordering?
+- Are there custom gestures (pinch, multi-finger)?
+
+**If YES:** See [ANDROID_ADVANCED.md](ANDROID_ADVANCED.md) for full implementation details.
+
+**Quick Fix:**
+```kotlin
+// Add custom accessibility actions
+ViewCompat.addAccessibilityAction(view, "Delete") { _, _ ->
+    deleteItem()
+    true
+}
+```
+
+**WCAG SC:** 2.5.1 Pointer Gestures (Level A), 2.1.1 Keyboard (Level A)
+
+---
+
+### 9. Custom Views Accessibility
+
+> 📖 **See complete guide:** [ANDROID_CUSTOM_VIEWS.md](ANDROID_CUSTOM_VIEWS.md)
+
+**Issue:** Custom views without proper accessibility implementation
+
+**⚠️ CRITICAL:** Custom views require special attention to accessibility. Most apps use standard components and won't need this section.
+
+**When to use the custom views guide:**
+- ✅ App has views extending directly from `View`
+- ✅ Complex controls with multiple sub-regions (calendars, charts, grids)
+- ✅ Custom touch handling or gesture recognition
+- ❌ Standard Material components (Button, TextField, etc.) - use sections above
+
+**Quick Principles:**
+
+1. **Extend from most specific widget**, not from `View`
+   ```kotlin
+   // ✅ CORRECT
+   class CustomButton(context: Context) : Button(context) {
+       // Inherits all Button accessibility
+   }
+   ```
+
+2. **Override accessibility methods** when extending `View`
+   - `onInitializeAccessibilityNodeInfo()` - Set role, state, actions
+   - `performAccessibilityAction()` - Handle actions
+   - `performClick()` - Required for touch handling
+
+3. **Handle keyboard navigation**
+   ```kotlin
+   KeyEvent.KEYCODE_DPAD_CENTER,
+   KeyEvent.KEYCODE_ENTER -> { performClick(); true }
+   ```
+
+4. **Use ExploreByTouchHelper** for complex multi-region views
+
+**For detailed implementation:** See [ANDROID_CUSTOM_VIEWS.md](ANDROID_CUSTOM_VIEWS.md)
+
+**WCAG SC:** 4.1.2 Name, Role, Value (Level A)
+
+---
+
+### 10. Use Cues Other Than Color
+
+**Issue:** UI elements distinguished only by color, excluding color-blind users
+
+**⚠️ CRITICAL:** Never rely on color alone to convey information, state, or actions.
+
+**Impact:**
+- 8% of men and 0.5% of women have color vision deficiency
+- Users in bright sunlight may not distinguish colors
+- Violates WCAG 1.4.1 Use of Color (Level A)
+
+**Common Issues:**
+
+**1. Error States (Forms):**
+```kotlin
+// ❌ ISSUE: Error shown only with red border
+OutlinedTextField(
+    value = email,
+    onValueChange = { email = it },
+    isError = hasError,
+    colors = OutlinedTextFieldDefaults.colors(
+        errorBorderColor = Color.Red  // Only visual cue!
+    )
+)
+
+// ✅ CORRECT: Error with icon + text message
+OutlinedTextField(
+    value = email,
+    onValueChange = { email = it },
+    isError = hasError,
+    leadingIcon = if (hasError) {
+        { Icon(Icons.Default.Error, "Error", tint = Color.Red) }
+    } else null,
+    supportingText = if (hasError) {
+        { Text("Invalid email address") }  // Text explanation
+    } else null
+)
+```
+
+**2. Status Indicators:**
+```kotlin
+// ❌ ISSUE: Status shown only with color
+@Composable
+fun ServerStatus(isOnline: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(12.dp)
+            .background(if (isOnline) Color.Green else Color.Red)
+    )
+}
+
+// ✅ CORRECT: Status with shape + text
+@Composable
+fun ServerStatus(isOnline: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = if (isOnline) Icons.Default.CheckCircle else Icons.Default.Cancel,
+            contentDescription = null,
+            tint = if (isOnline) Color.Green else Color.Red,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = if (isOnline) "Online" else "Offline",
+            style = MaterialTheme.typography.bodySmall
+        )
+    }
+}
+```
+
+**3. Required Fields:**
+```xml
+<!-- ❌ ISSUE: Required field shown only with red asterisk -->
+<TextView
+    android:text="Email *"
+    android:textColor="@color/red"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" />
+
+<!-- ✅ CORRECT: Required indicated with text -->
+<TextView
+    android:text="Email (required)"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" />
+```
+
+**4. Charts and Graphs:**
+```kotlin
+// ❌ ISSUE: Lines distinguished only by color
+LineChart(
+    lines = listOf(
+        Line(data1, color = Color.Red),
+        Line(data2, color = Color.Blue),
+        Line(data3, color = Color.Green)
+    )
+)
+
+// ✅ CORRECT: Lines with different patterns/markers
+LineChart(
+    lines = listOf(
+        Line(data1, color = Color.Red, pattern = LinePattern.Solid, marker = Marker.Circle),
+        Line(data2, color = Color.Blue, pattern = LinePattern.Dashed, marker = Marker.Square),
+        Line(data3, color = Color.Green, pattern = LinePattern.Dotted, marker = Marker.Triangle)
+    )
+)
+```
+
+**5. Buttons and Links:**
+```kotlin
+// ❌ ISSUE: Link shown only with color
+Text(
+    text = "Terms of Service",
+    color = Color.Blue  // Only cue that it's clickable
+)
+
+// ✅ CORRECT: Link with underline + color
+Text(
+    text = "Terms of Service",
+    color = Color.Blue,
+    textDecoration = TextDecoration.Underline,  // Additional cue
+    modifier = Modifier.clickable { openTerms() }
+)
+```
+
+**6. Progress/Completion:**
+```kotlin
+// ❌ ISSUE: Progress bar color changes only
+LinearProgressIndicator(
+    progress = 0.75f,
+    color = if (progress >= 0.8f) Color.Green else Color.Blue
+)
+
+// ✅ CORRECT: Progress with text percentage
+Column {
+    LinearProgressIndicator(progress = 0.75f)
+    Text("75% complete")  // Text indicator
+}
+
+// ✅ ALTERNATIVE: Use icons for completion states
+Row {
+    repeat(5) { index ->
+        Icon(
+            imageVector = if (index < completedSteps) {
+                Icons.Default.CheckCircle  // Filled icon
+            } else {
+                Icons.Default.RadioButtonUnchecked  // Outline icon
+            },
+            contentDescription = if (index < completedSteps) "Completed" else "Incomplete",
+            tint = if (index < completedSteps) Color.Green else Color.Gray
+        )
+    }
+}
+```
+
+**Visual Cues Checklist:**
+- ✅ **Shape** - Different icons, borders, patterns
+- ✅ **Text** - Labels, descriptions, status messages
+- ✅ **Position** - Spatial arrangement, alignment
+- ✅ **Size** - Different dimensions for hierarchy
+- ✅ **Pattern** - Stripes, dots, dashes
+- ✅ **Animation** - Movement, pulsing (with pause controls)
+- ✅ **Haptic feedback** - Vibration patterns
+- ✅ **Audio cues** - Sounds (with volume control)
+
+**Testing for Color Accessibility:**
+1. Use Android Accessibility Scanner
+2. Test with color blindness simulators:
+   - Chrome DevTools: Rendering → Emulate vision deficiencies
+   - Apps: Color Oracle, Sim Daltonism
+3. Convert UI to grayscale - can you still distinguish all elements?
+4. Check WCAG color contrast ratios (see Contrast Checking section)
+
+**WCAG SC:**
+- **Primary:** 1.4.1 Use of Color (Level A)
+- **Related:** 1.4.11 Non-text Contrast (Level AA)
+
+**Severity:** High (affects 8% of male users)
+
+---
+
+### 11. Media Accessibility
+
+> 📖 **See advanced guide:** [ANDROID_ADVANCED.md](ANDROID_ADVANCED.md#media-accessibility)
+
+**Issue:** Audio/video content without captions, transcripts, or accessible controls
+
+**⚠️ CRITICAL:** All media content must be accessible. This is required only if your app has video/audio.
+
+**Quick Check:**
+- Does the app have video content?
+- Does it have audio-only content (podcasts, music)?
+- Are there media player controls?
+
+**If NO media:** Skip this section.
+**If YES:** See [ANDROID_ADVANCED.md](ANDROID_ADVANCED.md#media-accessibility) for full requirements.
+
+**Quick Requirements:**
+- [ ] Captions/subtitles for all video
+- [ ] Accessible play/pause, volume, progress controls
+- [ ] Transcripts for important content
+- [ ] No auto-play with sound
+
+**WCAG SC:** 1.2.1, 1.2.2, 1.2.3 (Level A), 1.2.4, 1.2.5 (Level AA)
+
+---
+### 12. Live Regions (Compose)
 
 **Issue:** Dynamic content without announcement
 
@@ -671,7 +961,7 @@ LaunchedEffect(uploadComplete) {
 
 ---
 
-### 9. State Descriptions (Compose)
+### 13. State Descriptions (Compose)
 
 > ⚠️ **CRITICAL:** Most components announce their state AUTOMATICALLY. Only use `stateDescription` for custom value formatting (sliders). See [Avoid Redundant Information](patterns/AVOID_ROLE_IN_LABEL.md).
 
@@ -746,7 +1036,7 @@ Slider(
 
 ---
 
-### 10. Grouping Related Content (Compose)
+### 14. Grouping Related Content (Compose)
 
 **Issue:** Related elements announced separately
 
@@ -780,7 +1070,7 @@ Row(
 
 ---
 
-### 11. Collection Items (RecyclerView, LazyColumn, LazyRow)
+### 15. Collection Items (RecyclerView, LazyColumn, LazyRow)
 
 > 📖 **See detailed pattern guide:** [Collection Items Pattern](patterns/COLLECTION_ITEMS_PATTERN.md)
 >
@@ -872,7 +1162,7 @@ Card(
 
 ---
 
-### 12. Bottom Navigation Bar Accessibility
+### 16. Bottom Navigation Bar Accessibility
 
 > 📖 **See detailed pattern guide:** [Navigation Bar Accessibility](patterns/NAVIGATION_BAR_ACCESSIBILITY.md)
 >
@@ -994,7 +1284,7 @@ fun CustomNavItem(label: String, icon: ImageVector, selected: Boolean, onClick: 
 
 ---
 
-### 13. Context for Repeated Elements
+### 17. Context for Repeated Elements
 
 > 📖 **See detailed pattern guide:** [Repeated Elements Context](patterns/REPEATED_ELEMENTS_CONTEXT.md)
 >
@@ -1072,6 +1362,21 @@ fun CategoryRow(category: Category) {
 
 ---
 
+## Android Accessibility Services
+
+> 📖 **See advanced guide:** [ANDROID_ADVANCED.md](ANDROID_ADVANCED.md#android-system-accessibility-services)
+
+Android provides several built-in accessibility services. Understanding them helps you design better accessible experiences.
+
+**Key Services:**
+- **TalkBack** - Screen reader for blind/low vision users
+- **Switch Access** - For users with motor impairments
+- **Voice Access** - Voice control for the entire app
+- **Font/Display Size** - 15-30% of users adjust these
+
+**For detailed information on how each service works and design implications:** See [ANDROID_ADVANCED.md](ANDROID_ADVANCED.md#android-system-accessibility-services)
+
+---
 ## Android TV Specific
 
 ### D-pad Navigation
@@ -1133,31 +1438,230 @@ TvLazyColumn(
 
 ## Testing Tools
 
-### Automated
-- **Accessibility Scanner** - Android app for scanning running apps
-- **Espresso with Accessibility Checks** - Automated UI testing
-  ```kotlin
-  AccessibilityChecks.enable()
-  ```
-- **Layout Inspector** - Android Studio tool
+### Automated Testing
 
-### Manual Testing
-- **TalkBack** - Enable in Settings > Accessibility
-- **Switch Access** - For motor impairments
-- **Select to Speak** - Text-to-speech
-- **Font Size** - Test with large text (Settings > Display > Font size)
+**1. Accessibility Scanner (Google Play)**
+- Install: https://play.google.com/store/apps/details?id=com.google.android.apps.accessibility.auditor
+- Scans running apps for common issues
+- Provides suggestions and severity ratings
+- Tests: content descriptions, touch targets, contrast ratios, text size
 
-### TalkBack Gestures
-- Swipe right/left: Next/previous item
-- Double-tap: Activate
-- Two-finger swipe down: Read from top
-- Three-finger swipe: Navigate by headings
+**2. Espresso with Accessibility Checks:**
+```kotlin
+// build.gradle
+androidTestImplementation 'androidx.test.espresso:espresso-accessibility:3.5.1'
+
+// In your test class
+import androidx.test.espresso.accessibility.AccessibilityChecks
+
+class MyAccessibilityTest {
+    @Before
+    fun setup() {
+        // Enable accessibility checks for all tests
+        AccessibilityChecks.enable()
+    }
+
+    @Test
+    fun testButtonAccessibility() {
+        onView(withId(R.id.submit_button))
+            .check(matches(isDisplayed()))
+            .perform(click())
+        // Accessibility checks run automatically on every interaction
+    }
+}
+```
+
+**3. Compose Testing with Accessibility:**
+```kotlin
+@Test
+fun testAccessibleButton() {
+    composeTestRule.setContent {
+        Button(onClick = {}) {
+            Text("Submit")
+        }
+    }
+
+    // Verify accessible by content description
+    composeTestRule
+        .onNodeWithContentDescription("Submit")
+        .assertIsDisplayed()
+        .assertHasClickAction()
+
+    // Verify touch target size
+    composeTestRule
+        .onNodeWithText("Submit")
+        .assertTouchHeightIsEqualTo(48.dp)
+        .assertTouchWidthIsEqualTo(48.dp)
+}
+```
+
+**4. Validate Accessibility Actions:**
+```kotlin
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+
+// Test custom accessibility actions
+@Test
+fun testCustomActions() {
+    val view = findViewById<View>(R.id.custom_view)
+
+    val info = AccessibilityNodeInfoCompat.obtain()
+    ViewCompat.onInitializeAccessibilityNodeInfo(view, info)
+
+    // Verify actions are present
+    val actions = info.actionList
+    assertTrue(actions.any { it.label == "Archive" })
+    assertTrue(actions.any { it.label == "Delete" })
+
+    // Perform action
+    val result = ViewCompat.performAccessibilityAction(
+        view,
+        AccessibilityNodeInfoCompat.ACTION_CLICK,
+        null
+    )
+    assertTrue(result)
+}
+```
+
+**5. Layout Inspector (Android Studio)**
+- View > Tool Windows > Layout Inspector
+- Inspect accessibility properties: contentDescription, importantForAccessibility
+- Verify semantic hierarchy
+
+### Manual Testing with Assistive Technologies
+
+**TalkBack (Screen Reader)**
+- Enable: Settings > Accessibility > TalkBack
+- Or use Quick Settings tile for faster toggling
+- Tests: content descriptions, navigation order, announcements
+- **Key Gestures:**
+  - Swipe right/left: Next/previous item
+  - Double-tap: Activate focused item
+  - Two-finger swipe down: Read from top
+  - Two-finger swipe up: Read from current position
+  - Three-finger swipe left/right: Navigate by headings
+  - Swipe down then right: Open TalkBack menu
+  - Swipe up then right: Actions menu (custom actions)
+  - Two-finger double-tap: Pause/resume reading
+  - Explore by touch: Drag finger to hear items
+
+**Switch Access (Motor Impairment Support)**
+- Enable: Settings > Accessibility > Switch Access
+- Use physical switches or screen buttons
+- Tests: keyboard navigation, focus order, all actions accessible
+- Highlights interactive elements sequentially
+- **Modes:**
+  - Auto scan: Automatically highlights items
+  - Manual scan: User triggers scanning
+  - Point scan: Cross-hair scanning
+- Configure switches: volume buttons, external bluetooth buttons, camera button
+
+**Select to Speak**
+- Enable: Settings > Accessibility > Select to Speak
+- Tap items to hear them read aloud
+- Tests: text readability, content descriptions
+
+**Voice Access**
+- Enable: Settings > Accessibility > Voice Access
+- Control app entirely by voice commands
+- Tests: all actions can be performed without touch
+
+**Font Size & Display Size**
+- Settings > Display > Font size → Set to "Largest"
+- Settings > Display > Display size → Set to "Largest"
+- Tests: text scales properly, layouts don't break, no text cutoff
+
+**Color Correction (Simulate Color Blindness)**
+- Settings > Accessibility > Color correction
+- Test different types: Deuteranomaly (red-green), Protanomaly (red-green), Tritanomaly (blue-yellow)
+- Verify UI doesn't rely solely on color
+
+### Testing Checklist
+
+**Before Release:**
+- [ ] Test entire app with TalkBack enabled
+- [ ] Navigate using only Switch Access (if applicable)
+- [ ] Run Accessibility Scanner on all major screens
+- [ ] Test with Font size set to "Largest"
+- [ ] Test with Display size set to "Largest"
+- [ ] Verify color contrast ratios (use Accessibility Scanner)
+- [ ] Test with color blindness simulation
+- [ ] Run automated Espresso accessibility tests
+- [ ] Verify all gestures have accessibility action equivalents
+- [ ] Test media controls with TalkBack
+- [ ] Verify all form inputs are properly labeled
+- [ ] Check that all images have appropriate contentDescription or are marked decorative
+- [ ] Test D-pad navigation (for TV apps)
+- [ ] Verify custom views have proper accessibility implementation
+
+**Specific Feature Testing:**
+- [ ] Swipe actions: Verify accessibility actions work
+- [ ] Dialogs: Focus moves to dialog, can be dismissed
+- [ ] Bottom sheets: Properly announced, can be closed
+- [ ] Tabs: Selection state announced, position indicated
+- [ ] Forms: Labels persist, errors announced
+- [ ] Lists: Items merge properly, context provided
+- [ ] Media: Controls accessible, captions available
+- [ ] Modals: Focus trapped, ESC/back button works
 
 ---
 
 ## Common Android-Specific Issues
 
-### 1. RecyclerView Items
+### 1. Custom Views Without Proper Accessibility
+
+**Issue:** Custom views built from scratch without implementing accessibility methods
+
+> 📖 **See comprehensive guide:** Section 9 - Extending System Widgets Properly (above)
+
+```kotlin
+// ❌ ISSUE: Custom view with no accessibility
+class BadCustomButton(context: Context) : View(context) {
+    init {
+        setOnClickListener { /* action */ }
+    }
+    // Missing: accessibility methods, keyboard support, events
+}
+
+// ✅ CORRECT: Extend Button, get accessibility for free
+class GoodCustomButton(context: Context) : Button(context) {
+    // Inherits all Button accessibility automatically
+}
+
+// ✅ CORRECT: If must extend View, implement all accessibility
+class CompleteCustomButton(context: Context) : View(context) {
+    init {
+        isFocusable = true
+        isClickable = true
+    }
+
+    override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo?) {
+        super.onInitializeAccessibilityNodeInfo(info)
+        info?.className = Button::class.java.name
+        info?.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK)
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        handleClick()
+        return true
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                performClick()
+                true
+            }
+            else -> super.onKeyDown(keyCode, event)
+        }
+    }
+}
+```
+
+**WCAG SC:** 4.1.2 Name, Role, Value (Level A)
+
+### 2. RecyclerView Items
 
 ```kotlin
 // ✅ CORRECT: Accessible RecyclerView item
@@ -1172,10 +1676,10 @@ class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 }
 ```
 
-### 2. Bottom Navigation
+### 3. Bottom Navigation
 
-```kotlin
-// ✅ CORRECT: Label always shown for accessibility
+```xml
+<!-- ✅ CORRECT: Label always shown for accessibility -->
 <com.google.android.material.bottomnavigation.BottomNavigationView
     android:id="@+id/bottomNav"
     app:labelVisibilityMode="labeled"
@@ -1183,7 +1687,7 @@ class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     android:layout_height="wrap_content" />
 ```
 
-### 3. FAB (Floating Action Button)
+### 4. FAB (Floating Action Button)
 
 ```xml
 <!-- ✅ CORRECT: FAB with content description -->
@@ -1195,15 +1699,70 @@ class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     android:layout_height="wrap_content" />
 ```
 
+### 5. Complex Views Without Virtual Hierarchy
+
+**Issue:** Calendar, grid, or multi-region view where TalkBack sees only one element
+
+```kotlin
+// ❌ ISSUE: Complex calendar, but TalkBack can't access individual days
+class CalendarView(context: Context) : View(context) {
+    // 30+ clickable day cells, but announced as single item
+}
+
+// ✅ CORRECT: Use ExploreByTouchHelper for virtual views
+class CalendarView(context: Context) : View(context) {
+    init {
+        val touchHelper = object : ExploreByTouchHelper(this) {
+            override fun getVirtualViewAt(x: Float, y: Float): Int {
+                return findDayAt(x, y) ?: INVALID_ID
+            }
+
+            override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
+                for (day in 1..daysInMonth) {
+                    virtualViewIds.add(day)
+                }
+            }
+
+            override fun onPopulateNodeForVirtualView(
+                virtualViewId: Int,
+                node: AccessibilityNodeInfoCompat
+            ) {
+                node.text = "Day $virtualViewId"
+                node.setBoundsInParent(getDayBounds(virtualViewId))
+                node.addAction(AccessibilityNodeInfoCompat.ACTION_CLICK)
+            }
+
+            override fun onPerformActionForVirtualView(
+                virtualViewId: Int,
+                action: Int,
+                arguments: Bundle?
+            ): Boolean {
+                if (action == AccessibilityNodeInfoCompat.ACTION_CLICK) {
+                    selectDay(virtualViewId)
+                    return true
+                }
+                return false
+            }
+        }
+        ViewCompat.setAccessibilityDelegate(this, touchHelper)
+    }
+}
+```
+
+**WCAG SC:** 4.1.2 Name, Role, Value (Level A)
+
 ---
 
 ## Resources
 
 ### Official Documentation
-- **Android Accessibility:** https://developer.android.com/guide/topics/ui/accessibility
+- **Android Accessibility Overview:** https://developer.android.com/guide/topics/ui/accessibility
+- **Accessibility Principles:** https://developer.android.com/guide/topics/ui/accessibility/principles
+- **Custom Views Accessibility:** https://developer.android.com/guide/topics/ui/accessibility/custom-views
 - **Testing:** https://developer.android.com/guide/topics/ui/accessibility/testing
 - **Compose Accessibility:** https://developer.android.com/jetpack/compose/accessibility
 - **TalkBack:** https://support.google.com/accessibility/android/answer/6283677
+- **ExploreByTouchHelper:** https://developer.android.com/reference/androidx/customview/widget/ExploreByTouchHelper
 
 ### Code Labs
 - **Basic Accessibility:** https://developer.android.com/codelabs/basic-android-accessibility
@@ -1211,22 +1770,6 @@ class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
 ---
 
-## Quick Checklist
-
-- [ ] All ImageButton/ImageView elements have contentDescription or are marked decorative
-- [ ] All Compose Icons have contentDescription or are properly marked as decorative
-- [ ] Touch targets are minimum 48dp × 48dp
-- [ ] EditText fields have persistent labels (not just hints)
-- [ ] Section titles are marked as headings
-- [ ] Custom clickable views have proper accessibility setup
-- [ ] Dynamic content uses live regions or announcements
-- [ ] Toggle states are properly announced
-- [ ] Related content is grouped with mergeDescendants (Compose)
-- [ ] Tested with TalkBack enabled
-- [ ] Font scaling tested (up to largest size)
-- [ ] D-pad navigation works (for TV)
-
----
 
 **Related Guides:**
 - GUIDE_WCAG_REFERENCE.md - WCAG principles

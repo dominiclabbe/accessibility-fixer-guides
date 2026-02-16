@@ -1,20 +1,7 @@
 # iOS & tvOS Accessibility Audit Guide
-## UIKit, SwiftUI, VoiceOver
 
 ---
 
-## Overview
-
-This guide covers accessibility auditing for iOS and tvOS applications using:
-- UIKit (traditional View-based UI)
-- SwiftUI (declarative UI)
-- VoiceOver (screen reader)
-- Dynamic Type
-- Accessibility Inspector
-
-**Target:** WCAG 2.2 Level AA compliance adapted for mobile
-
----
 
 ## ⚠️ CRITICAL AUDIT REPORT REQUIREMENTS
 
@@ -32,60 +19,6 @@ This guide covers accessibility auditing for iOS and tvOS applications using:
 
 ---
 
-## Technology Focus
-
-### Core iOS Technologies
-- **UIKit:** UIView, UIViewController, Interface Builder
-- **SwiftUI:** Declarative UI framework
-- **VoiceOver:** iOS/tvOS screen reader
-- **Accessibility Properties:** Labels, hints, traits, values
-- **Dynamic Type:** Scalable text
-
----
-
-## ⚠️ CRITICAL: Avoid Redundant Information in Accessible Labels
-
-> 📖 **See comprehensive pattern guide:** [Avoid Redundant Information](patterns/AVOID_ROLE_IN_LABEL.md)
-
-**THE MOST COMMON ACCESSIBILITY MISTAKE:** Adding information to accessibilityLabel/accessibilityValue that components already announce automatically.
-
-### Four Types of Redundancy to NEVER Include:
-
-1. **❌ Role Redundancy** - "Submit button", "Home tab", "Email text field"
-   - Components announce their role automatically
-   - ❌ WRONG: `.accessibilityLabel("Close button")` → VoiceOver: "Close button, button"
-   - ✅ CORRECT: Button with text "Close" → VoiceOver: "Close, button"
-
-2. **❌ State Redundancy** - Adding state to accessibilityValue when component announces it
-   - Tabs, Toggles, Switches announce state automatically
-   - ❌ WRONG: Toggle with `.accessibilityValue("On")` → VoiceOver: "Dark mode, on, switch, on"
-   - ✅ CORRECT: `Toggle("Dark mode", isOn: $enabled)` → VoiceOver: "Dark mode, on, switch"
-   - ❌ WRONG: Tab with `.accessibilityValue("Selected")` → VoiceOver: "Home, selected, tab, selected"
-   - ✅ CORRECT: Use `.accessibilityAddTraits(.isSelected)` → VoiceOver: "Home, selected, tab"
-   - ⚠️ EXCEPTION: Sliders NEED accessibilityValue for custom value formatting
-
-3. **❌ Position Redundancy** - Adding "tab 1 of 4" or similar to accessibilityLabel
-   - TabView/TabBar components announce position automatically
-   - ❌ WRONG: `.accessibilityLabel("Home, tab 1 of 4")` → VoiceOver: "Home, tab 1 of 4, tab, 1 of 4"
-   - ✅ CORRECT: Let TabView handle position announcement
-
-4. **❌ Property/Context Redundancy** - Duplicating visible text or obvious context
-   - ❌ WRONG: TextField with `.accessibilityLabel("Username text field")` (redundant "text field")
-   - ✅ CORRECT: TextField with placeholder "Username" → VoiceOver: "Username, text field"
-   - ❌ WRONG: Button with `.accessibilityLabel("Pause stopwatch")` when text says "Pause"
-   - ✅ CORRECT: Button text "Pause" → VoiceOver: "Pause, button"
-   - ❌ WRONG: Time display with `.accessibilityLabel("Elapsed time: 00:42:15")` (duplicates visible text)
-   - ✅ CORRECT: Text displays "00:42:15" → VoiceOver reads visible text
-
-### Quick Rules:
-- **Use `.accessibilityAddTraits(.isSelected)`** for selection state, NOT accessibilityValue
-- **NEVER add accessibilityValue** to Toggles, Switches, Tabs (they announce automatically)
-- **ONLY use accessibilityValue** for custom value formatting (sliders: "50 percent")
-- **Don't duplicate visible text** in accessibilityLabel
-- **Don't add accessibilityLabel** to standard TextField/Button if placeholder/text is sufficient
-- **Let native components handle** role, state, and position announcements
-
----
 
 ## Key Code Patterns to Check
 
@@ -930,27 +863,6 @@ grep -r "channelLogo" ios/**/*View.swift
 
 ---
 
-## Testing Tools
-
-### Xcode Tools
-- **Accessibility Inspector** - Real-time analysis
-- **Environment Overrides** - Test Dynamic Type, accessibility settings
-- **Accessibility Audit** - Automated checks in Xcode
-
-### On-Device Testing
-- **VoiceOver** - Enable in Settings > Accessibility
-- **Switch Control** - For motor impairments
-- **Voice Control** - Voice commands
-- **Display & Text Size** - Test larger text sizes
-
-### VoiceOver Gestures
-- Swipe right/left: Next/previous element
-- Double-tap: Activate
-- Two-finger swipe: Scroll
-- Rotor (two fingers rotate): Change navigation mode
-- Three-finger swipe: Page navigation
-
----
 
 ## Dynamic Type Support
 
@@ -973,40 +885,5 @@ Text("Hello")
 
 ---
 
-## Resources
 
-### Official Documentation
-- **iOS Accessibility:** https://developer.apple.com/accessibility/ios/
-- **Human Interface Guidelines:** https://developer.apple.com/design/human-interface-guidelines/accessibility
-- **UIAccessibility:** https://developer.apple.com/documentation/uikit/uiaccessibility
-- **SwiftUI Accessibility:** https://developer.apple.com/documentation/swiftui/view-accessibility
 
-### WWDC Sessions
-- Search for "Accessibility" in WWDC videos
-- "What's New in Accessibility" (annual)
-- "SwiftUI Accessibility" sessions
-
----
-
-## Quick Checklist
-
-- [ ] All images/icons have accessibilityLabel or are hidden
-- [ ] All interactive elements have appropriate traits
-- [ ] Section headings marked with .header trait
-- [ ] Custom views properly configured for accessibility
-- [ ] Text inputs have persistent labels
-- [ ] Dynamic content announces changes
-- [ ] Custom actions provided for gesture-only features
-- [ ] Touch targets minimum 44×44 points
-- [ ] Related elements grouped appropriately
-- [ ] Tested with VoiceOver enabled
-- [ ] Dynamic Type supported and tested
-- [ ] Focus engine configured (tvOS)
-
----
-
-**Related Guides:**
-- GUIDE_WCAG_REFERENCE.md - WCAG principles
-- GUIDE_TVOS.md - tvOS-specific guidance
-- COMMON_ISSUES.md - Cross-platform patterns
-- AUDIT_REPORT_TEMPLATE.md - Report format

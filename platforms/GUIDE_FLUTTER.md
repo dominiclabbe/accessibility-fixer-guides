@@ -1,15 +1,7 @@
 # Flutter Accessibility Audit Guide
-## Cross-Platform Development with Dart
 
 ---
 
-## Overview
-
-This guide covers accessibility auditing for Flutter applications.
-
-**Target:** WCAG 2.2 Level AA compliance adapted for mobile
-
----
 
 ## Key Code Patterns to Check
 
@@ -398,24 +390,5 @@ Semantics(
 
 ---
 
-## Testing Tools
 
-- Use platform screen readers (TalkBack, VoiceOver)
-- Flutter DevTools for widget inspection
-- Test on both Android and iOS
 
----
-
-## Quick Checklist
-
-- [ ] Images wrapped in Semantics or ExcludeSemantics
-- [ ] Interactive widgets have button: true
-- [ ] Related elements use MergeSemantics
-- [ ] Form fields have labels
-- [ ] Dynamic content uses liveRegion
-
----
-
-**Related Guides:**
-- GUIDE_WCAG_REFERENCE.md
-- COMMON_ISSUES.md
