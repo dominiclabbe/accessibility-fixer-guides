@@ -47,6 +47,7 @@
     "react-native": "platforms/GUIDE_REACT_NATIVE.md",
     "flutter": "platforms/GUIDE_FLUTTER.md",
     "android-tv": "platforms/GUIDE_ANDROID_TV.md",
+    "fire-tv": "platforms/GUIDE_ANDROID_TV.md",
     "tvos": "platforms/GUIDE_TVOS.md"
   },
 
@@ -76,6 +77,13 @@
         "file": "platforms/ANDROID_ADVANCED.md",
         "loadWhen": "Gestures (swipe/drag), media content, forms with autofill, keyboard navigation (D-pad), or multi-language content detected",
         "tokenEstimate": 4555
+      }
+    },
+    "fire-tv": {
+      "fire-os-features": {
+        "file": "platforms/FIRE_OS_ADVANCED.md",
+        "loadWhen": "Fire TV app detected, media content with AD/CC requirements, VoiceView-specific metadata (describedBy, orientationText, usageHint), or custom views for Fire OS",
+        "tokenEstimate": 4080
       }
     }
   }

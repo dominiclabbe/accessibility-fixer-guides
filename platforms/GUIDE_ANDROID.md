@@ -10,7 +10,9 @@ This guide covers accessibility auditing for Android applications using:
 - Jetpack Compose
 - Android Views and ViewGroups
 - Material Design components
-- Android TV interfaces
+- Android TV & Fire TV interfaces
+
+**Platform Coverage:** Android mobile, tablets, Android TV, and Amazon Fire TV (Fire OS)
 
 **Target:** WCAG 2.2 Level AA compliance adapted for mobile
 
@@ -41,6 +43,8 @@ This is the **core Android accessibility audit guide** covering common issues yo
   - Use when: App has custom views extending from `View`, complex multi-region controls
 - **[ANDROID_ADVANCED.md](ANDROID_ADVANCED.md)** - Advanced topics (gestures, media)
   - Use when: App has swipe gestures, drag-and-drop, video/audio content
+- **[GUIDE_ANDROID_TV.md](GUIDE_ANDROID_TV.md)** - Android TV & Fire TV specific patterns
+  - Use when: Auditing 10-foot UI, D-pad navigation, or TV applications
 
 **Focus of this guide:** Common accessibility patterns for standard Android apps.
 
@@ -644,6 +648,7 @@ ViewCompat.addAccessibilityAction(view, "Delete") { _, _ ->
    ```
 
 4. **Use ExploreByTouchHelper** for complex multi-region views
+   - ⚠️ **Fire TV Note:** ExploreByTouchHelper may not work on Fire OS - see [GUIDE_ANDROID_TV.md](GUIDE_ANDROID_TV.md) for alternatives
 
 **For detailed implementation:** See [ANDROID_CUSTOM_VIEWS.md](ANDROID_CUSTOM_VIEWS.md)
 
@@ -1377,7 +1382,7 @@ Android provides several built-in accessibility services. Understanding them hel
 **For detailed information on how each service works and design implications:** See [ANDROID_ADVANCED.md](ANDROID_ADVANCED.md#android-system-accessibility-services)
 
 ---
-## Android TV Specific
+## Android TV & Fire TV Specific
 
 ### D-pad Navigation
 
@@ -1410,7 +1415,7 @@ TvLazyColumn(
 - All interactive elements must be focusable
 - Focus order should be logical (usually left-to-right, top-to-bottom)
 - Focus indicators must be clearly visible
-- Content descriptions still required for TalkBack on TV
+- Content descriptions still required for TalkBack (Android TV) and VoiceView (Fire TV)
 
 ---
 
@@ -1710,6 +1715,7 @@ class CalendarView(context: Context) : View(context) {
 }
 
 // ✅ CORRECT: Use ExploreByTouchHelper for virtual views
+// ⚠️ Fire TV Note: ExploreByTouchHelper may not work on Fire OS
 class CalendarView(context: Context) : View(context) {
     init {
         val touchHelper = object : ExploreByTouchHelper(this) {
@@ -1824,6 +1830,6 @@ This guide references patterns from the CVS Health Android Accessibility Techniq
 
 **Related Guides:**
 - GUIDE_WCAG_REFERENCE.md - WCAG principles
-- GUIDE_ANDROID_TV.md - TV-specific guidance
+- GUIDE_ANDROID_TV.md - Android TV & Fire TV specific guidance
 - COMMON_ISSUES.md - Cross-platform patterns
 - AUDIT_REPORT_TEMPLATE.md - Report format

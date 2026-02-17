@@ -435,6 +435,8 @@ TalkBack users can't access individual sub-components of a complex custom view.
 
 ### Solution 1: ExploreByTouchHelper (Recommended)
 
+> **⚠️ Fire TV/Fire OS Note:** ExploreByTouchHelper may not function as expected on Fire OS. If your app targets Fire TV, consider implementing AccessibilityNodeProvider directly. See [GUIDE_ANDROID_TV.md](GUIDE_ANDROID_TV.md#1-explorebytouchhelper-compatibility-issue) for Fire OS-specific implementation.
+
 ```kotlin
 class CustomCalendarView(context: Context) : View(context) {
 
